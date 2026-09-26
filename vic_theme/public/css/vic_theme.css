@@ -1,0 +1,968 @@
+/* =========================================================================
+   VIC THEME — instance-wide Frappe/ERPNext theming layer
+   =========================================================================
+   How it works:
+   - We define our OWN palette variables (--vic-*) per theme, keyed off a
+     [data-vic-theme="..."] attribute that vic_theme.js sets on <html>.
+   - We map those onto Frappe's own CSS variables where they exist
+     (safe, intended extension point) AND add direct selector overrides
+     for the handful of elements that vary across Frappe versions
+     (more fragile, but necessary for real visual impact).
+   - Frappe's own light/dark toggle (data-theme="light|dark") keeps working
+     independently — every theme below has a light and a dark variant, so
+     "FarePoint + dark mode" and "FarePoint + light mode" both work.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. THEME PRESETS — palette variables only. Add new themes here.
+   ------------------------------------------------------------------------- */
+
+/* --- Default: Violet (VIC house style) --- */
+:root,
+:root[data-vic-theme="violet"] {
+  --vic-accent: #6c5ce7;
+  --vic-accent-hover: #5b4bd6;
+  --vic-accent-soft: #efecfd;
+  --vic-bg: #f7f7fb;
+  --vic-surface: #ffffff;
+  --vic-border: #e6e4f0;
+  --vic-text: #1f1f2b;
+  --vic-text-muted: #6b6b80;
+  --vic-success: #16a34a;
+  --vic-danger: #e5484d;
+  --vic-warning: #f5a524;
+  --vic-info: #3b82f6;
+}
+:root[data-theme="dark"][data-vic-theme="violet"] {
+  --vic-accent: #8b7cf6;
+  --vic-accent-hover: #a394f8;
+  --vic-accent-soft: #262244;
+  --vic-bg: #14141c;
+  --vic-surface: #1c1c28;
+  --vic-border: #2c2c3c;
+  --vic-text: #f0f0f5;
+  --vic-text-muted: #9c9cb0;
+}
+
+/* --- FarePoint: navy + magenta, matching the marketing brand deck --- */
+:root[data-vic-theme="farepoint"] {
+  --vic-accent: #e91e8c;
+  --vic-accent-hover: #d10f7a;
+  --vic-accent-soft: #fce7f3;
+  --vic-bg: #f8f9fc;
+  --vic-surface: #ffffff;
+  --vic-border: #e3e6f0;
+  --vic-text: #1b2a4e;
+  --vic-text-muted: #5b6785;
+  --vic-success: #16a34a;
+  --vic-danger: #e5484d;
+  --vic-warning: #f5a524;
+  --vic-info: #2f6fed;
+}
+:root[data-theme="dark"][data-vic-theme="farepoint"] {
+  --vic-accent: #ff4fa8;
+  --vic-accent-hover: #ff77bc;
+  --vic-accent-soft: #3a1530;
+  --vic-bg: #0f1830;
+  --vic-surface: #16213f;
+  --vic-border: #223258;
+  --vic-text: #eef1fb;
+  --vic-text-muted: #9aa6c8;
+}
+
+/* --- Emerald: deep teal-green, calm/finance-y --- */
+:root[data-vic-theme="emerald"] {
+  --vic-accent: #0f766e;
+  --vic-accent-hover: #0d6560;
+  --vic-accent-soft: #e3f6f4;
+  --vic-bg: #f6faf9;
+  --vic-surface: #ffffff;
+  --vic-border: #e0ece9;
+  --vic-text: #123d38;
+  --vic-text-muted: #5f7d78;
+  --vic-success: #22c55e;
+  --vic-danger: #e5484d;
+  --vic-warning: #f5a524;
+  --vic-info: #0ea5e9;
+}
+:root[data-theme="dark"][data-vic-theme="emerald"] {
+  --vic-accent: #2dd4bf;
+  --vic-accent-hover: #5eead4;
+  --vic-accent-soft: #0e2e2a;
+  --vic-bg: #0b1615;
+  --vic-surface: #12211f;
+  --vic-border: #1e332f;
+  --vic-text: #eaf6f4;
+  --vic-text-muted: #8fada7;
+}
+
+/* --- Sunset: warm amber + plum, distinctive without being loud --- */
+:root[data-vic-theme="sunset"] {
+  --vic-accent: #d97706;
+  --vic-accent-hover: #b45f04;
+  --vic-accent-soft: #fdecd2;
+  --vic-bg: #fdf9f5;
+  --vic-surface: #ffffff;
+  --vic-border: #f0e4d6;
+  --vic-text: #3b2a20;
+  --vic-text-muted: #7a6a5c;
+  --vic-success: #16a34a;
+  --vic-danger: #dc2626;
+  --vic-warning: #f59e0b;
+  --vic-info: #7c2d56;
+}
+:root[data-theme="dark"][data-vic-theme="sunset"] {
+  --vic-accent: #fb923c;
+  --vic-accent-hover: #fdba74;
+  --vic-accent-soft: #34220f;
+  --vic-bg: #1a1512;
+  --vic-surface: #241d18;
+  --vic-border: #3a2e25;
+  --vic-text: #f7efe8;
+  --vic-text-muted: #ad9a8b;
+}
+
+/* --- Ocean: blue + sky, clean/corporate --- */
+:root[data-vic-theme="ocean"] {
+  --vic-accent: #2563eb;
+  --vic-accent-hover: #1d4fc4;
+  --vic-accent-soft: #e4ecfd;
+  --vic-bg: #f6f8fc;
+  --vic-surface: #ffffff;
+  --vic-border: #e2e8f4;
+  --vic-text: #0f2149;
+  --vic-text-muted: #5c6b8a;
+  --vic-success: #16a34a;
+  --vic-danger: #e5484d;
+  --vic-warning: #f5a524;
+  --vic-info: #0ea5e9;
+}
+:root[data-theme="dark"][data-vic-theme="ocean"] {
+  --vic-accent: #60a5fa;
+  --vic-accent-hover: #93c5fd;
+  --vic-accent-soft: #122240;
+  --vic-bg: #0c1524;
+  --vic-surface: #131e33;
+  --vic-border: #1f3050;
+  --vic-text: #eaf1fc;
+  --vic-text-muted: #91a3c4;
+}
+
+/* -------------------------------------------------------------------------
+   1a. ADDITIONAL PALETTES — adapted from the smm_virtual theme registry
+   into the --vic-* naming convention above. Nova/Ember/Verdant/Arctic/Candy
+   are light with a dark variant; Midnight/Forest are inherently dark
+   themes (no separate light variant, matching their source).
+   ------------------------------------------------------------------------- */
+
+/* --- Nova: violet + magenta, a punchier alternative to the default Violet --- */
+:root[data-vic-theme="nova"] {
+  --vic-accent: #7c3aed;
+  --vic-accent-hover: #6d28d9;
+  --vic-accent-soft: #f5f3ff;
+  --vic-bg: #faf5ff;
+  --vic-surface: #ffffff;
+  --vic-border: #e9d5ff;
+  --vic-text: #2e1065;
+  --vic-text-muted: #7c6a9c;
+  --vic-success: #10b981;
+  --vic-danger: #ef4444;
+  --vic-warning: #f59e0b;
+  --vic-info: #06b6d4;
+}
+:root[data-theme="dark"][data-vic-theme="nova"] {
+  --vic-accent: #a78bfa;
+  --vic-accent-hover: #c4b5fd;
+  --vic-accent-soft: #2e1065;
+  --vic-bg: #1a1033;
+  --vic-surface: #241640;
+  --vic-border: #3b2463;
+  --vic-text: #f3edff;
+  --vic-text-muted: #b8a6e0;
+}
+
+/* --- Ember: warm orange + amber, energetic without being loud --- */
+:root[data-vic-theme="ember"] {
+  --vic-accent: #f97316;
+  --vic-accent-hover: #ea580c;
+  --vic-accent-soft: #fff7ed;
+  --vic-bg: #fff7ed;
+  --vic-surface: #ffffff;
+  --vic-border: #fed7aa;
+  --vic-text: #431407;
+  --vic-text-muted: #9a6b4a;
+  --vic-success: #22c55e;
+  --vic-danger: #ef4444;
+  --vic-warning: #eab308;
+  --vic-info: #0ea5e9;
+}
+:root[data-theme="dark"][data-vic-theme="ember"] {
+  --vic-accent: #fb923c;
+  --vic-accent-hover: #fdba74;
+  --vic-accent-soft: #431407;
+  --vic-bg: #241206;
+  --vic-surface: #331a09;
+  --vic-border: #4d2a10;
+  --vic-text: #fff1e5;
+  --vic-text-muted: #d0a583;
+}
+
+/* --- Midnight: deep navy + indigo, dark by design (no light variant) --- */
+:root[data-vic-theme="midnight"] {
+  --vic-accent: #818cf8;
+  --vic-accent-hover: #a5b4fc;
+  --vic-accent-soft: rgba(129, 140, 248, 0.16);
+  --vic-bg: #0f172a;
+  --vic-surface: #1e293b;
+  --vic-border: rgba(255, 255, 255, 0.1);
+  --vic-text: #f1f5f9;
+  --vic-text-muted: #94a3b8;
+  --vic-success: #34d399;
+  --vic-danger: #f87171;
+  --vic-warning: #fcd34d;
+  --vic-info: #38bdf8;
+}
+
+/* --- Verdant: fresh green, calm and growth-oriented --- */
+:root[data-vic-theme="verdant"] {
+  --vic-accent: #059669;
+  --vic-accent-hover: #047857;
+  --vic-accent-soft: #ecfdf5;
+  --vic-bg: #ecfdf5;
+  --vic-surface: #ffffff;
+  --vic-border: #a7f3d0;
+  --vic-text: #022c22;
+  --vic-text-muted: #4d8a76;
+  --vic-success: #10b981;
+  --vic-danger: #ef4444;
+  --vic-warning: #f59e0b;
+  --vic-info: #0ea5e9;
+}
+:root[data-theme="dark"][data-vic-theme="verdant"] {
+  --vic-accent: #34d399;
+  --vic-accent-hover: #6ee7b7;
+  --vic-accent-soft: #022c22;
+  --vic-bg: #011a14;
+  --vic-surface: #0a2a20;
+  --vic-border: #124435;
+  --vic-text: #ecfdf5;
+  --vic-text-muted: #8fc9b3;
+}
+
+/* --- Arctic: cool blue-gray, crisp corporate look --- */
+:root[data-vic-theme="arctic"] {
+  --vic-accent: #0284c7;
+  --vic-accent-hover: #0369a1;
+  --vic-accent-soft: #f0f9ff;
+  --vic-bg: #f8fafc;
+  --vic-surface: #ffffff;
+  --vic-border: #e2e8f0;
+  --vic-text: #0f172a;
+  --vic-text-muted: #64748b;
+  --vic-success: #10b981;
+  --vic-danger: #ef4444;
+  --vic-warning: #f59e0b;
+  --vic-info: #06b6d4;
+}
+:root[data-theme="dark"][data-vic-theme="arctic"] {
+  --vic-accent: #38bdf8;
+  --vic-accent-hover: #7dd3fc;
+  --vic-accent-soft: #0c2b40;
+  --vic-bg: #0a1420;
+  --vic-surface: #101d2e;
+  --vic-border: #1c3049;
+  --vic-text: #eef4fb;
+  --vic-text-muted: #93a8c2;
+}
+
+/* --- Forest: deep green, dark by design (no light variant) --- */
+:root[data-vic-theme="forest"] {
+  --vic-accent: #22c55e;
+  --vic-accent-hover: #4ade80;
+  --vic-accent-soft: rgba(34, 197, 94, 0.14);
+  --vic-bg: #052e16;
+  --vic-surface: #14532d;
+  --vic-border: rgba(187, 247, 208, 0.12);
+  --vic-text: #f0fdf4;
+  --vic-text-muted: #86efac;
+  --vic-success: #22c55e;
+  --vic-danger: #f87171;
+  --vic-warning: #fbbf24;
+  --vic-info: #38bdf8;
+}
+
+/* --- Candy: playful pink/magenta, still restrained enough for business use --- */
+:root[data-vic-theme="candy"] {
+  --vic-accent: #db2777;
+  --vic-accent-hover: #be185d;
+  --vic-accent-soft: #fdf2f8;
+  --vic-bg: #fdf2f8;
+  --vic-surface: #ffffff;
+  --vic-border: #fbcfe8;
+  --vic-text: #500724;
+  --vic-text-muted: #a15a7d;
+  --vic-success: #10b981;
+  --vic-danger: #ef4444;
+  --vic-warning: #f59e0b;
+  --vic-info: #06b6d4;
+}
+:root[data-theme="dark"][data-vic-theme="candy"] {
+  --vic-accent: #f472b6;
+  --vic-accent-hover: #f9a8d4;
+  --vic-accent-soft: #500724;
+  --vic-bg: #2b0313;
+  --vic-surface: #3d0a1d;
+  --vic-border: #5c1230;
+  --vic-text: #fdf2f8;
+  --vic-text-muted: #d999b6;
+}
+
+/* -------------------------------------------------------------------------
+   2. MAP onto Frappe's own variables (safe extension point, version-tolerant)
+   ------------------------------------------------------------------------- */
+:root {
+  --primary: var(--vic-accent);
+  --primary-color: var(--vic-accent);
+  --btn-primary: var(--vic-accent);
+  --btn-primary-hover: var(--vic-accent-hover);
+  --bg-color: var(--vic-bg);
+  --fg-color: var(--vic-surface);
+  --border-color: var(--vic-border);
+  --text-color: var(--vic-text);
+  --text-muted: var(--vic-text-muted);
+  --heading-color: var(--vic-text);
+  --gray-600: var(--vic-text-muted);
+
+  /* Focus / selection highlight — light green, per request (D8FFC5) */
+  --vic-selection-green: #d8ffc5;
+  --vic-selection-green-border: #9adf74;
+  --vic-selection-green-glow: rgba(88, 171, 45, 0.22);
+}
+
+/* -------------------------------------------------------------------------
+   3. DIRECT OVERRIDES — buttons, navbar, sidebar, links
+   ------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+   3a. BUTTONS — filled, outline, and segmented toggle groups.
+   Matches the reference dashboard's language: rounded pill everything,
+   filled accent for the primary action, accent-outline for secondary
+   actions, muted/gray for disabled filters.
+   ------------------------------------------------------------------------- */
+.btn {
+  border-radius: 999px !important;
+}
+.btn-primary,
+.btn-primary:not(:disabled):not(.disabled) {
+  background-color: var(--vic-accent) !important;
+  border-color: var(--vic-accent) !important;
+  color: #ffffff !important;
+}
+.btn-primary:hover {
+  background-color: var(--vic-accent-hover) !important;
+  border-color: var(--vic-accent-hover) !important;
+}
+
+/* Secondary / outline / default buttons — accent border+text on a plain
+   surface, e.g. "Schedule maintenance", "Housekeeping plan", "View" */
+.btn-default,
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-secondary {
+  background-color: var(--vic-surface) !important;
+  border: 1px solid var(--vic-accent) !important;
+  color: var(--vic-accent) !important;
+}
+.btn-default:hover,
+.btn-secondary:hover,
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover {
+  background-color: var(--vic-accent-soft) !important;
+}
+
+/* Disabled / muted filter pills, e.g. a "Floor: all" filter with nothing
+   selected — grayed out rather than accent-colored, on purpose */
+.btn:disabled,
+.btn.disabled,
+.btn-default.text-muted {
+  background-color: var(--vic-surface) !important;
+  border: 1px solid var(--vic-border) !important;
+  color: var(--vic-text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Segmented toggle groups, e.g. "Today | Tomorrow | For a date" or
+   "Rooms | Cleanings" — one pill-shaped track, active segment filled */
+.btn-group .btn {
+  border: 1px solid var(--vic-border) !important;
+  background-color: var(--vic-surface) !important;
+  color: var(--vic-text) !important;
+}
+.btn-group .btn.active,
+.btn-group .btn:focus,
+.btn-group .btn.btn-active {
+  background-color: var(--vic-accent) !important;
+  border-color: var(--vic-accent) !important;
+  color: #ffffff !important;
+}
+
+a, .navbar a, .text-muted-on-hover:hover {
+  color: var(--vic-accent);
+}
+.navbar,
+.desk-sidebar,
+.page-head {
+  background-color: var(--vic-surface);
+  border-color: var(--vic-border);
+}
+.standard-sidebar-item,
+.sidebar-item {
+  border-radius: 999px !important;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.standard-sidebar-item:hover,
+.sidebar-item:hover {
+  background-color: var(--vic-accent-soft) !important;
+  color: var(--vic-accent) !important;
+}
+.standard-sidebar-item.selected,
+.sidebar-item.selected,
+.list-sidebar .selected a {
+  color: #ffffff !important;
+  background-color: var(--vic-accent) !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+}
+/* Restored to Frappe's actual indicator class names (blue/red) — the
+   pasted "mint"/"pink" variants matched nothing in Frappe's own markup,
+   which would have left the Enabled/Disabled pill unstyled by this theme */
+.indicator-pill.blue, .filterable.blue { background-color: var(--vic-info); }
+.indicator-pill.green, .filterable.green { background-color: var(--vic-success); }
+.indicator-pill.red, .filterable.red { background-color: var(--vic-danger); }
+.indicator-pill.orange, .filterable.orange { background-color: var(--vic-warning); }
+.indicator-pill {
+  border-radius: 999px;
+  font-weight: 500;
+  padding: 3px 10px;
+}
+
+/* -------------------------------------------------------------------------
+   4. BEAUTIFIED TABLES / LIST ROWS / GRIDS
+   ------------------------------------------------------------------------- */
+
+/* List View rows — rounder + a soft hover lift for a friendlier feel */
+.list-row,
+.list-row-container {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border-radius: 12px;
+  transition: background-color 0.12s ease, box-shadow 0.12s ease;
+}
+.list-row:hover,
+.list-row-container:hover {
+  background-color: var(--vic-accent-soft) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.list-row-col {
+  font-size: 13px;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+
+/* Report View / grid tables */
+.frappe-list .list-row-head,
+.dt-header,
+.dt-scrollable .dt-row-header {
+  background-color: var(--vic-surface) !important;
+  color: var(--vic-text-muted) !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--vic-border) !important;
+}
+.dt-row:hover .dt-cell__content {
+  background-color: var(--vic-accent-soft) !important;
+}
+/* Very light zebra striping — a hint, not a stripe */
+.dt-row-odd .dt-cell__content {
+  background-color: color-mix(in srgb, var(--vic-surface) 98.5%, var(--vic-text) 1.5%);
+}
+.dt-cell__content {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* Report View inline cell editor — the plain black-rectangle box that
+   appears when you click a cell to edit it inline. Frappe's DataTable
+   library renders this with zero styling by default, so it was still
+   showing the raw browser input outline; themed here to match. */
+.dt-cell-edit,
+.dt-cell-edit input,
+div.dt-cell--editing textarea {
+  border: 1.5px solid var(--vic-accent) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 0 3px var(--vic-accent-soft) !important;
+  outline: none !important;
+  font-size: 13px !important;
+}
+
+/* List View rows — same very light zebra, skips the header row */
+.list-row-container:nth-child(even) .list-row,
+.list-row-container:nth-child(even) {
+  background-color: color-mix(in srgb, var(--vic-surface) 98.5%, var(--vic-text) 1.5%);
+}
+
+/* Grid (child table) rows in forms — very light zebra + hover */
+.grid-body .grid-row:nth-child(even) {
+  background-color: color-mix(in srgb, var(--vic-surface) 98.5%, var(--vic-text) 1.5%);
+}
+.grid-body .grid-row:hover {
+  background-color: var(--vic-accent-soft);
+  border-radius: 6px;
+}
+.grid-heading-row {
+  font-weight: 600;
+  color: var(--vic-text-muted);
+}
+.grid-body .grid-row,
+.grid-body .row {
+  min-height: 28px !important;
+}
+.grid-body .grid-row .col,
+.grid-body .grid-row .data-row .static-area,
+.grid-body .grid-row input,
+.grid-body .grid-row select {
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  min-height: 28px !important;
+}
+
+/* Cards (dashboards, stat cards, kanban) */
+.widget, .dashboard-widget-box, .card, .kanban-card {
+  border-radius: 12px !important;
+  border: 1px solid var(--vic-border) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.widget:hover, .kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+/* Progress / stat bars, matching the "stat card" pattern from the reference UI */
+.vic-stat-bar {
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--vic-border);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.vic-stat-bar > span {
+  display: block;
+  height: 100%;
+  background-color: var(--vic-accent);
+  border-radius: 999px;
+}
+
+/* Filter pill bar, matching the reference UI's rounded pill filters */
+.vic-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--vic-border);
+  background-color: var(--vic-surface);
+  color: var(--vic-text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.vic-pill.active {
+  border-color: var(--vic-accent);
+  color: var(--vic-accent);
+  background-color: var(--vic-accent-soft);
+}
+
+/* -------------------------------------------------------------------------
+   5. FORM SECTIONS, TABS & FIELD-TYPE ACCENTS
+   Themed off the active palette — no hardcoded blue/green. Kept restrained:
+   one accent color for structure (sections/tabs), three muted semantic
+   accents for field types (Currency/Select get a cue, Data stays neutral).
+   ------------------------------------------------------------------------- */
+
+/* Section container */
+.form-section {
+  border: 1px solid var(--vic-border) !important;
+  border-radius: 8px !important;
+  margin-bottom: 18px !important;
+  background: var(--vic-surface) !important;
+  overflow: hidden;
+}
+
+/* Thin section header, in the active theme's accent color.
+   ~1/4 the height of a standard header — a slim color bar, not a banner. */
+.form-section .section-head {
+  background: var(--vic-accent) !important;
+  color: #ffffff !important;
+  padding: 2px 12px !important;
+  min-height: 14px !important;
+  line-height: 14px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 8px 8px 0 0 !important;
+  margin: -1px -1px 10px -1px !important;
+}
+
+/* Tabs — active tab is a solid accent fill, inactive tabs use the soft
+   accent tint. Same hue as the rest of the theme, just two weights of it,
+   so it reads as "the FarePoint app" rather than "a green tab someone added."
+   The tab row itself now sits on a soft background band, so the whole
+   Tab Break area reads as one grouped control, not just loose pills. */
+.form-tabs .nav-tabs {
+  border-bottom: 2px solid var(--vic-accent) !important;
+  background: color-mix(in srgb, var(--vic-accent-soft) 55%, var(--vic-surface)) !important;
+  border-radius: 999px 999px 0 0 !important;
+  padding: 6px 8px 0 8px !important;
+}
+.form-tabs .nav-tabs .nav-link {
+  background: var(--vic-accent-soft) !important;
+  color: var(--vic-accent) !important;
+  border: 1px solid var(--vic-accent-soft) !important;
+  border-bottom: none !important;
+  margin: 0 4px 0 0 !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  padding: 6px 16px !important;
+}
+.form-tabs .nav-tabs .nav-link:hover {
+  background: var(--vic-accent) !important;
+  color: #ffffff !important;
+  opacity: 0.85;
+}
+.form-tabs .nav-tabs .nav-link.active {
+  background: var(--vic-accent) !important;
+  color: #ffffff !important;
+  border-color: var(--vic-accent) !important;
+  box-shadow: 0 0 0 4px var(--vic-accent-soft) !important;
+}
+
+/* Field-type accents — a thin left border + focus ring, color coded by
+   fieldtype so a form is scannable at a glance. Muted, not saturated:
+   Currency -> success (money), Select -> info (a choice), Data -> neutral
+   with the theme accent only on focus. Every theme redefines success/info,
+   so the coding stays consistent in hue with whichever palette is active. */
+.frappe-control[data-fieldtype="Currency"] .control-input,
+.frappe-control[data-fieldtype="Float"] .control-input,
+.frappe-control[data-fieldtype="Int"] .control-input {
+  border-left: 3px solid var(--vic-success);
+  border-radius: 4px;
+}
+.frappe-control[data-fieldtype="Select"] .control-input,
+.frappe-control[data-fieldtype="Link"] .control-input,
+.frappe-control[data-fieldtype="Dynamic Link"] .control-input {
+  border-left: 3px solid var(--vic-info);
+  border-radius: 4px;
+}
+.frappe-control[data-fieldtype="Data"] .control-input,
+.frappe-control[data-fieldtype="Small Text"] .control-input,
+.frappe-control[data-fieldtype="Text"] .control-input {
+  border-left: 3px solid var(--vic-border);
+  border-radius: 4px;
+}
+/* Data / Small Text / Text — full 1.5px border line on the actual input,
+   not just the left accent above (which stays as the color-coding cue) */
+.frappe-control[data-fieldtype="Data"] .control-input input,
+.frappe-control[data-fieldtype="Small Text"] .control-input textarea,
+.frappe-control[data-fieldtype="Text"] .control-input textarea {
+  border: 1.5px solid var(--vic-border) !important;
+  border-radius: 4px !important;
+}
+
+/* All fields — bolder 1.5px border, same treatment across every fieldtype
+   (Currency/Select/Data alike), on top of the left-accent color-coding
+   above. Mixes in some of the muted-text color so the outline reads
+   clearly rather than disappearing into the page background. */
+.frappe-control .control-input input,
+.frappe-control .control-input select,
+.frappe-control .control-input textarea {
+  border: 1.5px solid color-mix(in srgb, var(--vic-text-muted) 45%, var(--vic-border)) !important;
+  border-radius: 4px !important;
+}
+.frappe-control .control-input input:hover,
+.frappe-control .control-input select:hover,
+.frappe-control .control-input textarea:hover {
+  border-color: color-mix(in srgb, var(--vic-text-muted) 70%, var(--vic-border)) !important;
+}
+/* Focus state — oval highlight in light green (D8FFC5), on top of the
+   existing field-type left-border accent above */
+.frappe-control .control-input input:focus,
+.frappe-control .control-input select:focus,
+.frappe-control .control-input textarea:focus {
+  border: 3px solid var(--vic-selection-green-border) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 0 7px var(--vic-selection-green-glow) !important;
+  background-color: var(--vic-selection-green) !important;
+}
+
+/* -------------------------------------------------------------------------
+   6. THEME SWITCHER WIDGET (injected into navbar by vic_theme.js)
+   ------------------------------------------------------------------------- */
+.vic-theme-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+}
+.vic-theme-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--vic-border);
+  background: conic-gradient(var(--vic-accent), var(--vic-accent-hover), var(--vic-accent));
+}
+.vic-theme-menu {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  background: var(--vic-surface);
+  border: 1px solid var(--vic-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 8px;
+  display: none;
+  z-index: 1000;
+  min-width: 190px;
+}
+.vic-theme-menu.open { display: block; }
+.vic-theme-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.vic-theme-option:hover { background-color: var(--vic-accent-soft); }
+.vic-theme-option.active { font-weight: 600; }
+.vic-theme-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* -------------------------------------------------------------------------
+   7. LIST VIEW POLISH
+   The sidebar is deliberately left light (var(--vic-surface) above, never
+   a dark navy) — that part of the reference mockup is not applied here.
+   This section tidies the pieces of the standard List View that DO exist
+   in Frappe: checkboxes, the search box, the count badge next to the
+   title, and filter/paging controls. True numbered pagination and
+   icon stat-cards above the list (as in the mockup) aren't native to
+   Desk's List View — ask if you want a custom List View script for a
+   specific doctype to add those.
+   ------------------------------------------------------------------------- */
+
+/* Checkboxes (row selection, bulk actions) pick up the theme accent
+   natively via the browser's own accent-color, no extra markup needed */
+input[type="checkbox"] {
+  accent-color: var(--vic-accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+/* Standard List View search box */
+.list-sidebar-content input[type="text"],
+.filter-area input[type="text"],
+.list-view-header input[type="text"] {
+  border-radius: 999px !important;
+  padding-left: 14px !important;
+}
+
+/* Count badge next to the doctype title, e.g. "Sales Invoice  132" */
+.page-head .title-text + .count,
+.page-title .count,
+.page-head .indicator-pill.no-indicator-dot-on-left {
+  background: var(--vic-accent-soft) !important;
+  color: var(--vic-accent) !important;
+  border-radius: 999px !important;
+  padding: 2px 10px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+/* Paging / "Load More" / page-length controls — buttons already pill-
+   shaped via the generic .btn rule; this just tightens their spacing */
+.list-paging-area,
+.level.list-paging-area {
+  gap: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   8. LIST VIEW — PACK PROFILE STYLE POLISH (theme-driven)
+   Adapted from the Pack Profile list view's look (gradient row hover with
+   a left accent border, gradient list-header, summary cards, filter
+   chips) but rebuilt on --vic-* variables instead of a fixed purple, so
+   it recolors with whichever palette is active — same as everything
+   else in this file. Cards/chips are opt-in per doctype (via
+   vic_theme.render_summary_cards / .vic_filter_chip in vic_theme.js);
+   the row/header polish below applies globally on its own.
+   ------------------------------------------------------------------------- */
+
+.list-row,
+.list-row-container {
+  border-left: 4px solid transparent !important;
+}
+.list-row:hover,
+.list-row-container:hover {
+  border-left-color: var(--vic-accent) !important;
+  transform: translateX(2px);
+}
+.list-row-container:nth-child(odd) {
+  background: linear-gradient(90deg, var(--vic-surface), color-mix(in srgb, var(--vic-surface) 97%, var(--vic-text) 3%)) !important;
+}
+
+/* Summary card row — a generic version of Pack Profile's gradient stat
+   cards, opt-in via vic_theme.render_summary_cards(listview, cards) */
+.vic-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 15px;
+  margin: 0 0 15px 0;
+  background: var(--vic-surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.06);
+}
+.vic-summary-card {
+  padding: 18px 14px;
+  border-radius: 12px;
+  text-align: center;
+  border: 2px solid var(--vic-border);
+  background: var(--vic-accent-soft);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.vic-summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  border-color: var(--vic-accent);
+}
+.vic-summary-card-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--vic-text-muted);
+}
+.vic-summary-card-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--vic-accent);
+}
+.vic-summary-card.success .vic-summary-card-value { color: var(--vic-success); }
+.vic-summary-card.danger .vic-summary-card-value { color: var(--vic-danger); }
+.vic-summary-card.warning .vic-summary-card-value { color: var(--vic-warning); }
+.vic-summary-card.info .vic-summary-card-value { color: var(--vic-info); }
+
+/* Filter chip row — a rounder, more playful alternative to .vic-pill,
+   with a count badge built in (Pack Profile's "filter-chip" pattern) */
+.vic-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 24px;
+  border: 2px solid var(--vic-border);
+  background: var(--vic-surface);
+  color: var(--vic-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.vic-filter-chip:hover {
+  border-color: var(--vic-accent);
+  background: var(--vic-accent-soft);
+  transform: translateY(-2px);
+}
+.vic-filter-chip.active {
+  background: var(--vic-accent);
+  color: #ffffff;
+  border-color: var(--vic-accent);
+  font-weight: 600;
+}
+.vic-filter-chip .vic-chip-count {
+  background: rgba(255,255,255,0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+.vic-filter-chip:not(.active) .vic-chip-count {
+  background: var(--vic-accent-soft);
+  color: var(--vic-accent);
+}
+
+/* -------------------------------------------------------------------------
+   9. THEME PICKER DIALOG (vic_theme.open_picker) — grid of theme cards
+   ------------------------------------------------------------------------- */
+.vic-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.vic-picker-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--vic-border);
+  background: var(--vic-surface);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.vic-picker-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+.vic-picker-icon {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vic-picker-info {
+  flex: 1;
+  min-width: 0;
+}
+.vic-picker-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vic-text);
+  margin-bottom: 6px;
+}
+.vic-picker-swatch {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+}
+.vic-picker-check {
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+@media (max-width: 700px) {
+  .vic-picker-grid { grid-template-columns: repeat(2, 1fr); }
+}
